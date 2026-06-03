@@ -34,6 +34,15 @@ import { ConflictDetector } from "./components/ConflictDetector.jsx";
 import { SubnetMap }        from "./components/SubnetMap.jsx";
 import { DiagnosticHub }   from "./components/DiagnosticHub.jsx";
 import { DHCPSimulator } from "./components/DHCPSimulator";
+
+import { StaticRouting, useStaticRouting } from "./components/StaticRouting";
+import { Traceroute }                      from "./components/Traceroute";
+import { TopologyManager } from "./components/TopologyManager";
+
+
+
+
+
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 const TABS = [
   { id: "config",    label: "Config"    },
@@ -41,6 +50,9 @@ const TABS = [
   { id: "conflicts", label: "Conflicts" },
   { id: "map",       label: "Map"       },
     { id: "dhcp",      label: "DHCP"      },
+    { id: "routing",  label: "Routes"    },
+{ id: "trace",    label: "Trace"     },
+{ id: "topology", label: "Save/Load" }
 ];
 
 // ─── Canvas grid background ───────────────────────────────────────────────────
@@ -67,6 +79,16 @@ export default function App() {
   updateNodeField(nodeId, "mask", mask);
   updateNodeField(nodeId, "gw",   gateway);
 }, [updateNodeField]);
+
+
+const { routingTables, addStaticRoute, removeStaticRoute, importTables } = useStaticRouting();
+
+const handleLoadTopology = useCallback(({ nodes, links, routingTables }) => {
+  setNodes(nodes);
+  setLinks(links);
+  setSelected(null);
+  importTables(routingTables);
+}, [importTables]);
 
 
   // ── UI state ───────────────────────────────────────────────────────────────
@@ -323,7 +345,7 @@ export default function App() {
 
         {/* ── Right panel ── */}
         <div style={{
-          width: 340, flexShrink: 0,
+          width: 600, flexShrink: 0,
           background: "#080f1e", borderLeft: "1px solid #0f2040",
           display: "flex", flexDirection: "column", overflow: "hidden",
         }}>
@@ -355,7 +377,9 @@ export default function App() {
             {rightTab === "conflicts" && <ConflictDetector nodes={nodes} />}
             {rightTab === "map"       && <SubnetMap nodes={nodes} />}
             {rightTab === "dhcp" && ( <DHCPSimulator   nodes={nodes} links={links}  onAssignIp={handleDhcpAssign}  /> )}
-
+            {rightTab === "routing"  && <StaticRouting nodes={nodes} routingTables={routingTables} onAddRoute={addStaticRoute} onRemoveRoute={removeStaticRoute} />}
+            {rightTab === "trace"    && <Traceroute nodes={nodes} links={links} routingTables={routingTables} onAnimatePath={startAnimation} />}
+            {rightTab === "topology" && <TopologyManager nodes={nodes} links={links} routingTables={routingTables} onLoad={handleLoadTopology} />}
           </div>
 
           {/* Diagnostic hub (always visible) */}
